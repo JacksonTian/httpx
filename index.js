@@ -23,35 +23,21 @@ exports.request = thunkify(function (url, opts, callback) {
   var parsedUrl = typeof url === 'string' ? urlutil.parse(url) : url;
 
   opts.timeout = opts.timeout || exports.TIMEOUT;
+  var isHttps = parsedUrl.protocol === 'https:';
   var method = (opts.method || 'GET').toUpperCase();
-  var port = parsedUrl.port || 80;
-  var httplib = http;
-  var agent = opts.agent || exports.agent;
-
-  if (parsedUrl.protocol === 'https:') {
-    httplib = https;
-    agent = opts.httpsAgent || exports.httpsAgent;
-    if (opts.httpsAgent === false) {
-      agent = false;
-    }
-    if (!parsedUrl.port) {
-      port = 443;
-    }
-  }
-
-  if (opts.agent === false) {
-    agent = false;
-  }
+  var defaultAgent = isHttps ? exports.httpsAgent : exports.agent;
+  var agent = opts.hasOwnProperty('agent') ? opts.agent : defaultAgent;
 
   var options = {
-    host: parsedUrl.hostname || parsedUrl.host || 'localhost',
+    host: parsedUrl.hostname || 'localhost',
     path: parsedUrl.path || '/',
     method: method,
-    port: port,
+    port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
     agent: agent,
     headers: opts.headers || {}
   };
 
+  var httplib = isHttps ? https : http;
   var req = httplib.request(options, function(res) {
     callback(null, res);
   });
