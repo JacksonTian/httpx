@@ -26,5 +26,8 @@
   },
   "dependencies": {
     "debug": "~2.2.0"
-  }
+  },
+  "files": [
+    "index.js"
+  ]
 }
