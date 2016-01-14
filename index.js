@@ -1,57 +1,101 @@
 'use strict';
 
-var http = require('http');
-var https = require('https');
-var urlutil = require('url');
+const http = require('http');
+const https = require('https');
+const parse = require('url').parse;
+const format = require('url').format;
 
-var thunkify = require('thunkify');
+const debug = require('debug')('httpx');
 
-// change Agent.maxSockets to 1000
-exports.agent = new http.Agent();
-exports.agent.maxSockets = 1000;
+const httpAgent = new http.Agent();
+const httpsAgent = new https.Agent();
 
-exports.httpsAgent = new https.Agent();
-exports.httpsAgent.maxSockets = 1000;
+const TIMEOUT = 3000; // 3s
 
-exports.request = thunkify(function (url, opts, callback) {
-  // request(url, callback)
-  if (arguments.length === 2 && typeof opts === 'function') {
-    callback = opts;
-    opts = {};
-  }
+var append = function (err, name, message) {
+  err.name = name + err.name;
+  err.message = message + '\n' + err.message;
+  return err;
+};
 
-  var parsedUrl = typeof url === 'string' ? urlutil.parse(url) : url;
+exports.request = function (url, opts) {
+  // request(url)
+  opts || (opts = {});
 
-  opts.timeout = opts.timeout || exports.TIMEOUT;
-  var isHttps = parsedUrl.protocol === 'https:';
-  var method = (opts.method || 'GET').toUpperCase();
-  var defaultAgent = isHttps ? exports.httpsAgent : exports.agent;
-  var agent = opts.hasOwnProperty('agent') ? opts.agent : defaultAgent;
+  const parsed = typeof url === 'string' ? parse(url) : url;
+
+  const timeout = opts.timeout || TIMEOUT;
+  const isHttps = parsed.protocol === 'https:';
+  const method = (opts.method || 'GET').toUpperCase();
+  const defaultAgent = isHttps ? httpsAgent : httpAgent;
+  const agent = opts.agent || defaultAgent;
 
   var options = {
-    host: parsedUrl.hostname || 'localhost',
-    path: parsedUrl.path || '/',
+    host: parsed.hostname || 'localhost',
+    path: parsed.path || '/',
     method: method,
-    port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+    port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
     agent: agent,
     headers: opts.headers || {}
   };
 
-  var httplib = isHttps ? https : http;
-  var req = httplib.request(options, function(res) {
-    callback(null, res);
-  });
+  const httplib = isHttps ? https : http;
 
-  req.on('error', function (err) {
-    callback(err);
-  });
-
-  var body = opts.data;
-
-  // string
-  if (!body || 'string' === typeof body || Buffer.isBuffer(body)) {
-    req.end(body);
-  } else if ('function' === typeof body.pipe) { // stream
-    body.pipe(req);
+  if (typeof opts.beforeRequest === 'function') {
+    options = opts.beforeRequest(options);
   }
-});
+
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    const req = httplib.request(options);
+
+    const body = opts.data;
+
+    var timer;
+
+    var cleanup = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    var fulfilled = (response) => {
+      cleanup();
+      const responseTime = Date.now() - startTime;
+      debug(`${options.method} ${response.statusCode} ${responseTime}ms ${format(parsed)}`);
+      resolve(response);
+    };
+
+    var rejected = (err) => {
+      cleanup();
+      reject(err);
+    };
+
+    var abort = (err) => {
+      req.abort();
+      rejected(err);
+    };
+
+    // string
+    if (!body || 'string' === typeof body || body instanceof Buffer) {
+      req.end(body);
+    } else if ('function' === typeof body.pipe) { // stream
+      body.pipe(req);
+      body.once('error', (err) => {
+        abort(append(err, 'HttpX', 'Stream occor error'));
+      });
+    }
+
+    req.on('response', fulfilled);
+    req.on('error', rejected);
+    // for timeout
+    timer = setTimeout(() => {
+      timer = null;
+      var err = new Error();
+      var message = `request ${format(parsed)} timeout(${timeout}).`;
+      abort(append(err, 'RequestTimeout', message));
+    }, timeout);
+  });
+};
