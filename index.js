@@ -99,3 +99,41 @@ exports.request = function (url, opts) {
     }, timeout);
   });
 };
+
+exports.read = function (readable, encoding) {
+  return new Promise((resolve, reject) => {
+    var cleanup = function (err) {
+      // cleanup
+      readable.removeListener('error', onError);
+      readable.removeListener('data', onData);
+      readable.removeListener('end', onEnd);
+    };
+
+    const bufs = [];
+    var size = 0;
+
+    var onData = function (buf) {
+      bufs.push(buf);
+      size += buf.length;
+    };
+
+    var onError = function (err) {
+      cleanup();
+      reject(err);
+    };
+
+    var onEnd = function () {
+      cleanup();
+      var buff = Buffer.concat(bufs, size);
+
+      if (encoding) {
+        return resolve(buff.toString(encoding));
+      }
+      resolve(buff);
+    };
+
+    readable.on('error', onError);
+    readable.on('data', onData);
+    readable.on('end', onEnd);
+  });
+};

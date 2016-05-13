@@ -71,7 +71,7 @@ Or async/await.
 
 ## API
 
-`httpx.request(url[, options])`
+### `httpx.request(url[, options])`
 
 - **url** String | Object - The URL to request, either a String or a Object that return by [url.parse](http://nodejs.org/api/url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost).
 - ***options*** Object - Optional
@@ -82,6 +82,11 @@ Or async/await.
     - ***agent*** [http.Agent](http://nodejs.org/api/http.html#http_class_http_agent) - HTTP/HTTPS Agent object.
       Set `false` if you does not use agent.
     - ***beforeRequest*** Function - Before request hook, you can change every thing here.
+
+### `httpx.read(response[, encoding])`
+
+- **response** Response - the Client response. Don't setEncoding() for the response.
+- **encoding** String - Optional.
 
 ## License
 The MIT license

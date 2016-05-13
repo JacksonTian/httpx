@@ -38,6 +38,8 @@ describe('httpx', () => {
   it('should ok', function* () {
     var res = yield make(server)('/');
     assert.equal(res.statusCode, 200);
+    var result = yield httpx.read(res, 'utf8');
+    assert.equal(result, 'Hello world!');
   });
 
   it('should timeout', function* () {
