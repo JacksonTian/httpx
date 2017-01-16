@@ -1,39 +1,35 @@
 TESTS = $(shell ls -S `find test -type f -name "*.test.js" -print`)
 REPORTER = spec
 TIMEOUT = 3000
-ISTANBUL = ./node_modules/.bin/istanbul
+PATH := ./node_modules/.bin:$(PATH)
 MOCHA = ./node_modules/mocha/bin/_mocha
-COVERALLS = ./node_modules/coveralls/bin/coveralls.js
 MOCHA_OPTS =
 
 test:
-	@NODE_ENV=test ./node_modules/.bin/mocha \
+	@mocha --require co-mocha \
 		--reporter $(REPORTER) \
-		--require co-mocha \
 		--timeout $(TIMEOUT) \
 		$(MOCHA_OPTS) \
 		$(TESTS)
 
 test-cov:
-	@NODE_ENV=test node \
-		$(ISTANBUL) cover --report html \
-		./node_modules/.bin/_mocha -- \
-		--reporter $(REPORTER) \
+	@istanbul cover --report html \
+		$(MOCHA) -- \
 		--require co-mocha \
+		--reporter $(REPORTER) \
 		--timeout $(TIMEOUT) \
 		$(MOCHA_OPTS) \
 		$(TESTS)
 
 test-coveralls:
-	@NODE_ENV=test node \
-		$(ISTANBUL) cover --report lcovonly \
-		./node_modules/.bin/_mocha -- \
-		--reporter $(REPORTER) \
+	@istanbul cover --report lcovonly \
+		$(MOCHA) -- \
 		--require co-mocha \
+		--reporter $(REPORTER) \
 		--timeout $(TIMEOUT) \
 		$(MOCHA_OPTS) \
 		$(TESTS)
 	@echo TRAVIS_JOB_ID $(TRAVIS_JOB_ID)
-	@cat ./coverage/lcov.info | $(COVERALLS) && rm -rf ./coverage
+	@cat ./coverage/lcov.info | coveralls && rm -rf ./coverage
 
 .PHONY: test
