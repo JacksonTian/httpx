@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const zlib = require('zlib');
 const assert = require('assert');
 
 const httpx = require('../');
@@ -11,6 +12,13 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('Hello world!');
     }, 200);
+  } else if (req.url === '/compression') {
+    res.writeHead(200, {
+      'content-encoding': 'gzip'
+    });
+    zlib.gzip('Hello world!', function (err, buff) {
+      res.end(buff);
+    });
   } else {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('Hello world!');
@@ -42,7 +50,14 @@ describe('httpx', () => {
     assert.equal(result, 'Hello world!');
   });
 
-  it('should timeout', function* () {
+  it('compression should ok', function* () {
+    var res = yield make(server)('/compression');
+    assert.equal(res.statusCode, 200);
+    var result = yield httpx.read(res, 'utf8');
+    assert.equal(result, 'Hello world!');
+  });
+
+  it('timeout should ok', function* () {
     try {
       yield make(server)('/timeout', {timeout: 100});
     } catch (ex) {
