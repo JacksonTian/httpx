@@ -1,6 +1,6 @@
 {
   "name": "httpx",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "http(s) module with power",
   "main": "lib/index.js",
   "scripts": {
@@ -27,6 +27,6 @@
     "debug": "^2.2.0"
   },
   "files": [
-    "index.js"
+    "lib"
   ]
 }
