@@ -43,23 +43,23 @@ describe('httpx', () => {
     server.close(done);
   });
 
-  it('should ok', function* () {
-    var res = yield make(server)('/');
+  it('should ok', async function () {
+    var res = await make(server)('/');
     assert.equal(res.statusCode, 200);
-    var result = yield httpx.read(res, 'utf8');
+    var result = await httpx.read(res, 'utf8');
     assert.equal(result, 'Hello world!');
   });
 
-  it('compression should ok', function* () {
-    var res = yield make(server)('/compression');
+  it('compression should ok', async function () {
+    var res = await make(server)('/compression');
     assert.equal(res.statusCode, 200);
-    var result = yield httpx.read(res, 'utf8');
+    var result = await httpx.read(res, 'utf8');
     assert.equal(result, 'Hello world!');
   });
 
-  it('timeout should ok', function* () {
+  it('timeout should ok', async function () {
     try {
-      yield make(server)('/timeout', {timeout: 100});
+      await make(server)('/timeout', {timeout: 100});
     } catch (ex) {
       assert.equal(ex.name, 'RequestTimeoutError');
       // assert.equal(ex.message, '');
