@@ -4,7 +4,10 @@
   "description": "http(s) module with power",
   "main": "lib/index.js",
   "scripts": {
-    "test": "make test"
+    "lint": "eslint --fix lib",
+    "test": "mocha --reporter spec --timeout 3000 test/*.test.js",
+    "test-cov": "nyc -r=lcov -r=html -r=text -r=json mocha -t 3000 -R spec test/*.test.js",
+    "ci": "npm run test-cov && cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
@@ -17,11 +20,10 @@
   },
   "homepage": "https://github.com/JacksonTian/httpx",
   "devDependencies": {
-    "co-mocha": "^1.1.3",
     "coveralls": "^2.11.15",
     "eslint": "^3.13.1",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.2.0"
+    "mocha": "^4",
+    "nyc": "^12.0.2"
   },
   "dependencies": {
     "debug": "^2.2.0"
