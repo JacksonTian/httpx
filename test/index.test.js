@@ -62,7 +62,8 @@ describe('httpx', () => {
       await make(server)('/timeout', {timeout: 100});
     } catch (ex) {
       assert.equal(ex.name, 'RequestTimeoutError');
-      // assert.equal(ex.message, '');
+      const port = server.address().port;
+      assert.equal(ex.message, `Timeout(100). GET http://127.0.0.1:${port}/timeout failed.`);
       return;
     }
     assert.ok(false, 'should not ok');
