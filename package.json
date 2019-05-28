@@ -3,6 +3,7 @@
   "version": "2.1.4",
   "description": "http(s) module with power",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "lint": "eslint --fix lib",
     "test": "mocha --reporter spec --timeout 3000 test/*.test.js",
@@ -26,6 +27,7 @@
     "nyc": "^12.0.2"
   },
   "dependencies": {
+    "@types/node": "^12.0.2",
     "debug": "^2.2.0"
   },
   "files": [
