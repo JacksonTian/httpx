@@ -2,7 +2,6 @@ import { IncomingMessage, Agent, OutgoingHttpHeaders } from "http";
 
 export interface Options {
     'method'?: string;
-    'headers'?: {[key: string]: string};
     'readTimeout'?: number;
     'connectTimeout'?: number;
     'timeout'?: number;
@@ -14,6 +13,6 @@ export interface Options {
     'data'?: string|Buffer|undefined;
 }
 
-export function request<T>(url: string, options: Options): Promise<IncomingMessage>;
+export function request(url: string, options: Options): Promise<IncomingMessage>;
 
 export function read(response: IncomingMessage, encoding: string): Promise<string|Buffer>;
