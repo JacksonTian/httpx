@@ -1,4 +1,5 @@
 import { IncomingMessage, Agent, OutgoingHttpHeaders } from "http";
+import { Readable } from "stream";
 
 export interface Options {
     'method'?: string;
@@ -10,7 +11,7 @@ export interface Options {
     'rejectUnauthorized'?: boolean;
     'compression'?: boolean;
     'beforeRequest'?(options: Options): void;
-    'data'?: string|Buffer|undefined;
+    'data'?: string|Buffer|Readable|undefined;
 }
 
 export function request(url: string, options: Options): Promise<IncomingMessage>;
