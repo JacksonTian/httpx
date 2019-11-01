@@ -22,7 +22,7 @@
   "homepage": "https://github.com/JacksonTian/httpx",
   "devDependencies": {
     "coveralls": "^2.11.15",
-    "eslint": "^3.13.1",
+    "eslint": "^6.6.0",
     "mocha": "^4",
     "nyc": "^12.0.2"
   },
