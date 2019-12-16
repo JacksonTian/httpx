@@ -103,17 +103,17 @@ describe('httpx', () => {
 
   it('read timeout should ok', async function () {
     const res = await make(server)('/readTimeout2', {readTimeout: 100, connectTimeout: 50, timeout: 300});
-    const err = await new Promise(resolve=> {
+    const err = await new Promise((resolve) => {
       setTimeout(async function () {
         try {
-          const data = await httpx.read(res);
+          await httpx.read(res);
           resolve(null);
         } catch (err) {
           resolve(err);
         }
-      }, 200)
+      }, 200);
     });
     assert.ok(err, 'should throw error');
-    assert.equal(err.message, 'ReadTimeout: 100. GET /readTimeout2 failed.')
+    assert.equal(err.message, 'ReadTimeout: 100. GET /readTimeout2 failed.');
   });
 });
