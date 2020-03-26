@@ -3,6 +3,7 @@
 const http = require('http');
 const zlib = require('zlib');
 const assert = require('assert');
+const SocksProxyAgent = require('socks-proxy-agent');
 
 const httpx = require('../');
 
@@ -115,5 +116,16 @@ describe('httpx', () => {
     });
     assert.ok(err, 'should throw error');
     assert.equal(err.message, 'ReadTimeout: 100. GET /readTimeout2 failed.');
+  });
+
+  it('should throw an error', async function () {
+    try {
+      // socks://127.0.0.1:3000 is an invalid socks proxy address.
+      await make(server)('/', { agent: new SocksProxyAgent('socks://127.0.0.1:3000') });
+      assert.fail('should not run here');
+    } catch (error) {
+      const port = server.address().port;
+      assert.equal(error.message, `connect ECONNREFUSED 127.0.0.1:3000GET http://127.0.0.1:${port}/ failed.`);
+    }
   });
 });
