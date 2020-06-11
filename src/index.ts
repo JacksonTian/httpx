@@ -1,13 +1,16 @@
 'use strict';
 
-const zlib = require('zlib');
-const http = require('http');
-const https = require('https');
-const parse = require('url').parse;
-const format = require('url').format;
+import zlib from 'zlib';
+import http from 'http';
+import https from 'https';
 
-const debugBody = require('debug')('httpx:body');
-const debugHeader = require('debug')('httpx:header');
+import { IncomingMessage, Agent, OutgoingHttpHeaders, RequestOptions } from "http";
+import { Readable } from "stream";
+import { parse, format } from 'url';
+import debug from 'debug';
+
+const debugBody = debug('httpx:body');
+const debugHeader = debug('httpx:header');
 
 const httpAgent = new http.Agent({ keepAlive: true });
 const httpsAgent = new https.Agent({ keepAlive: true });
@@ -17,23 +20,36 @@ const TIMEOUT = 3000; // 3s
 const READ_TIMER = Symbol('TIMER::READ_TIMER');
 const READ_TIME_OUT = Symbol('TIMER::READ_TIME_OUT');
 
-var append = function (err, name, message) {
+function append(err: Error, name: string, message: string): Error {
   err.name = name + err.name;
   err.message = `${message}. ${err.message}`;
   return err;
-};
+}
 
-const isNumber = function (num) {
+function isNumber(num: number): boolean {
   return num !== null && !isNaN(num);
-};
+}
 
-exports.request = function (url, opts) {
+export interface Options {
+  'method'?: string;
+  'readTimeout'?: number;
+  'connectTimeout'?: number;
+  'timeout'?: number;
+  'agent'?: Agent;
+  'headers'?: OutgoingHttpHeaders;
+  'rejectUnauthorized'?: boolean;
+  'compression'?: boolean;
+  'beforeRequest'?(options: Options): void;
+  'data'?: string|Buffer|Readable|undefined;
+}
+
+exports.request = function (url: string, opts: Options): Promise<IncomingMessage> {
   // request(url)
   opts || (opts = {});
 
   const parsed = typeof url === 'string' ? parse(url) : url;
 
-  let readTimeout, connectTimeout;
+  let readTimeout: number, connectTimeout: number;
   if (isNumber(opts.readTimeout) || isNumber(opts.connectTimeout)) {
     readTimeout = isNumber(opts.readTimeout) ? Number(opts.readTimeout) : TIMEOUT;
     connectTimeout = isNumber(opts.connectTimeout) ? Number(opts.connectTimeout) : TIMEOUT;
@@ -48,7 +64,7 @@ exports.request = function (url, opts) {
   const defaultAgent = isHttps ? httpsAgent : httpAgent;
   const agent = opts.agent || defaultAgent;
 
-  var options = {
+  var options: RequestOptions = {
     host: parsed.hostname || 'localhost',
     path: parsed.path || '/',
     method: method,
@@ -60,7 +76,7 @@ exports.request = function (url, opts) {
   };
 
   if (isHttps && typeof opts.rejectUnauthorized !== 'undefined') {
-    options.rejectUnauthorized = opts.rejectUnauthorized;
+    (<https.RequestOptions>options).rejectUnauthorized = opts.rejectUnauthorized;
   }
 
   if (opts.compression) {
@@ -70,7 +86,7 @@ exports.request = function (url, opts) {
   const httplib = isHttps ? https : http;
 
   if (typeof opts.beforeRequest === 'function') {
-    options = opts.beforeRequest(options);
+    opts.beforeRequest(options);
   }
 
   return new Promise((resolve, reject) => {
@@ -101,7 +117,7 @@ exports.request = function (url, opts) {
       reject(err);
     };
 
-    var abort = (err) => {
+    var abort = (err: Error) => {
       request.abort();
       rejected(err);
     };
@@ -130,7 +146,7 @@ exports.request = function (url, opts) {
         } else if ('string' === typeof body) {
           debugBody(body);
         } else {
-          debugBody(`Buffer <ignored>, Buffer length: ${body.length}`);
+          debugBody(`Buffer <ignored>, Buffer length: ${(<Buffer>body).length}`);
         }
       }
       request.end(body);
@@ -159,8 +175,8 @@ exports.request = function (url, opts) {
   });
 };
 
-exports.read = function (response, encoding) {
-  var readable = response;
+exports.read = function (response: IncomingMessage, encoding: null | string) : Promise<string|Buffer> {
+  var readable: Readable = response;
   switch (response.headers['content-encoding']) {
   // or, just use zlib.createUnzip() to handle both cases
   case 'gzip':
@@ -182,7 +198,7 @@ exports.read = function (response, encoding) {
       return err;
     };
     // check read-timer
-    let readTimer;
+    let readTimer: NodeJS.Timeout;
     const oldReadTimer = response.socket[READ_TIMER];
     if (!oldReadTimer) {
       reject(makeReadTimeoutError());
@@ -194,12 +210,13 @@ exports.read = function (response, encoding) {
       reject(makeReadTimeoutError());
       return;
     }
+
     readTimer = setTimeout(function () {
       reject(makeReadTimeoutError());
     }, remainTime);
 
     // start reading data
-    var onError, onData, onEnd;
+    var onError: (err: Error) => void, onData: (buf: Buffer) => void, onEnd: () => void;
     var cleanup = function () {
       // cleanup
       readable.removeListener('error', onError);
@@ -211,20 +228,20 @@ exports.read = function (response, encoding) {
       }
     };
 
-    const bufs = [];
+    const bufs: Buffer[] = [];
     var size = 0;
 
-    onData = function (buf) {
+    onData = function (buf: Buffer) {
       bufs.push(buf);
       size += buf.length;
     };
 
-    onError = function (err) {
+    onError = function (err: Error): void {
       cleanup();
       reject(err);
     };
 
-    onEnd = function () {
+    onEnd = function (): void {
       cleanup();
       var buff = Buffer.concat(bufs, size);
 
@@ -232,7 +249,8 @@ exports.read = function (response, encoding) {
       if (encoding) {
         const result = buff.toString(encoding);
         debugBody(result);
-        return resolve(result);
+        resolve(result);
+        return;
       }
 
       if (debugBody.enabled) {
