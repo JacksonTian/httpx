@@ -11,7 +11,9 @@ export interface Options {
     'rejectUnauthorized'?: boolean;
     'compression'?: boolean;
     'beforeRequest'?(options: Options): void;
-    'data'?: string|Buffer|Readable|undefined;
+    'data'?: string | Buffer | Readable | undefined;
+    'key'?: string;
+    'cert'?: string;
 }
 
 export function request(url: string, options: Options): Promise<IncomingMessage>;
