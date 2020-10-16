@@ -14,6 +14,7 @@ export interface Options {
     'data'?: string | Buffer | Readable | undefined;
     'key'?: string;
     'cert'?: string;
+    'ca'?: string;
 }
 
 export function request(url: string, options: Options): Promise<IncomingMessage>;
