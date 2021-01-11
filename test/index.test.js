@@ -3,11 +3,20 @@
 const http = require('http');
 const zlib = require('zlib');
 const assert = require('assert');
+const SocksProxyAgent = require('socks-proxy-agent');
 
 const httpx = require('../');
 
 const server = http.createServer((req, res) => {
-  if (req.url === '/timeout') {
+  if(req.url === '/readTimeout') {
+    setTimeout(() => {
+      res.writeHead(200, {'Content-Type': 'text/plain'});
+      res.end('Hello world!');
+    }, 200);
+  } else if (req.url === '/readTimeout2') {
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    res.end('Hello world!');
+  } else if (req.url === '/timeout') {
     setTimeout(() => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('Hello world!');
@@ -43,28 +52,80 @@ describe('httpx', () => {
     server.close(done);
   });
 
-  it('should ok', function* () {
-    var res = yield make(server)('/');
+  it('should ok', async function () {
+    var res = await make(server)('/');
     assert.equal(res.statusCode, 200);
-    var result = yield httpx.read(res, 'utf8');
+    var result = await httpx.read(res, 'utf8');
     assert.equal(result, 'Hello world!');
   });
 
-  it('compression should ok', function* () {
-    var res = yield make(server)('/compression');
+  it('compression should ok', async function () {
+    var res = await make(server)('/compression');
     assert.equal(res.statusCode, 200);
-    var result = yield httpx.read(res, 'utf8');
+    var result = await httpx.read(res, 'utf8');
     assert.equal(result, 'Hello world!');
   });
 
-  it('timeout should ok', function* () {
+  it('timeout should ok', async function () {
     try {
-      yield make(server)('/timeout', {timeout: 100});
+      await make(server)('/timeout', {timeout: 100});
     } catch (ex) {
       assert.equal(ex.name, 'RequestTimeoutError');
-      // assert.equal(ex.message, '');
+      const port = server.address().port;
+      assert.equal(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/timeout failed.`);
       return;
     }
     assert.ok(false, 'should not ok');
+  });
+
+  it('timeout should ok', async function () {
+    try {
+      await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50});
+    } catch (ex) {
+      assert.equal(ex.name, 'RequestTimeoutError');
+      const port = server.address().port;
+      assert.equal(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
+      return;
+    }
+    assert.ok(false, 'should not ok');
+  });
+
+  it('timeout should ok', async function () {
+    try {
+      await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50, timeout: 300});
+    } catch (ex) {
+      assert.equal(ex.name, 'RequestTimeoutError');
+      const port = server.address().port;
+      assert.equal(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
+      return;
+    }
+    assert.ok(false, 'should not ok');
+  });
+
+  it('read timeout should ok', async function () {
+    const res = await make(server)('/readTimeout2', {readTimeout: 100, connectTimeout: 50, timeout: 300});
+    const err = await new Promise((resolve) => {
+      setTimeout(async function () {
+        try {
+          await httpx.read(res);
+          resolve(null);
+        } catch (err) {
+          resolve(err);
+        }
+      }, 200);
+    });
+    assert.ok(err, 'should throw error');
+    assert.equal(err.message, 'ReadTimeout: 100. GET /readTimeout2 failed.');
+  });
+
+  it('should throw an error', async function () {
+    try {
+      // socks://127.0.0.1:3000 is an invalid socks proxy address.
+      await make(server)('/', { agent: new SocksProxyAgent('socks://127.0.0.1:3000') });
+      assert.fail('should not run here');
+    } catch (error) {
+      const port = server.address().port;
+      assert.equal(error.message, `connect ECONNREFUSED 127.0.0.1:3000GET http://127.0.0.1:${port}/ failed.`);
+    }
   });
 });
