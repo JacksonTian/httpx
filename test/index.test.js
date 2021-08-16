@@ -25,7 +25,14 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, {
       'content-encoding': 'gzip'
     });
-    zlib.gzip('Hello world!', function (err, buff) {
+    zlib.gzip('Hello world with gzip!', function (err, buff) {
+      res.end(buff);
+    });
+  } else if (req.url === '/compression_with_deflate') {
+    res.writeHead(200, {
+      'content-encoding': 'deflate'
+    });
+    zlib.deflate('Hello world with deflate!', function (err, buff) {
       res.end(buff);
     });
   } else {
@@ -54,25 +61,39 @@ describe('httpx', () => {
 
   it('should ok', async function () {
     var res = await make(server)('/');
-    assert.equal(res.statusCode, 200);
+    assert.strictEqual(res.statusCode, 200);
     var result = await httpx.read(res, 'utf8');
-    assert.equal(result, 'Hello world!');
+    assert.strictEqual(result, 'Hello world!');
+  });
+
+  it('should ok with buffer', async function () {
+    var res = await make(server)('/');
+    assert.strictEqual(res.statusCode, 200);
+    var result = await httpx.read(res);
+    assert.deepStrictEqual(result, Buffer.from('Hello world!'));
   });
 
   it('compression should ok', async function () {
     var res = await make(server)('/compression');
-    assert.equal(res.statusCode, 200);
+    assert.strictEqual(res.statusCode, 200);
     var result = await httpx.read(res, 'utf8');
-    assert.equal(result, 'Hello world!');
+    assert.strictEqual(result, 'Hello world with gzip!');
+  });
+
+  it('compression with deflate should ok', async function () {
+    var res = await make(server)('/compression_with_deflate');
+    assert.strictEqual(res.statusCode, 200);
+    var result = await httpx.read(res, 'utf8');
+    assert.strictEqual(result, 'Hello world with deflate!');
   });
 
   it('timeout should ok', async function () {
     try {
       await make(server)('/timeout', {timeout: 100});
     } catch (ex) {
-      assert.equal(ex.name, 'RequestTimeoutError');
+      assert.strictEqual(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
-      assert.equal(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/timeout failed.`);
+      assert.strictEqual(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/timeout failed.`);
       return;
     }
     assert.ok(false, 'should not ok');
@@ -82,9 +103,9 @@ describe('httpx', () => {
     try {
       await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50});
     } catch (ex) {
-      assert.equal(ex.name, 'RequestTimeoutError');
+      assert.strictEqual(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
-      assert.equal(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
+      assert.strictEqual(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
       return;
     }
     assert.ok(false, 'should not ok');
@@ -94,9 +115,9 @@ describe('httpx', () => {
     try {
       await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50, timeout: 300});
     } catch (ex) {
-      assert.equal(ex.name, 'RequestTimeoutError');
+      assert.strictEqual(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
-      assert.equal(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
+      assert.strictEqual(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
       return;
     }
     assert.ok(false, 'should not ok');
@@ -115,7 +136,7 @@ describe('httpx', () => {
       }, 200);
     });
     assert.ok(err, 'should throw error');
-    assert.equal(err.message, 'ReadTimeout: 100. GET /readTimeout2 failed.');
+    assert.strictEqual(err.message, 'ReadTimeout: 100. GET /readTimeout2 failed.');
   });
 
   it('should throw an error', async function () {
@@ -125,7 +146,7 @@ describe('httpx', () => {
       assert.fail('should not run here');
     } catch (error) {
       const port = server.address().port;
-      assert.equal(error.message, `connect ECONNREFUSED 127.0.0.1:3000GET http://127.0.0.1:${port}/ failed.`);
+      assert.strictEqual(error.message, `connect ECONNREFUSED 127.0.0.1:3000GET http://127.0.0.1:${port}/ failed.`);
     }
   });
 });
