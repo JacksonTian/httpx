@@ -5,7 +5,6 @@ http(s) module with power.
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
 [![codecov][cov-image]][cov-url]
-[![David deps][david-image]][david-url]
 [![npm download][download-image]][download-url]
 
 [npm-image]: https://img.shields.io/npm/v/httpx.svg?style=flat-square
@@ -14,8 +13,6 @@ http(s) module with power.
 [travis-url]: https://travis-ci.org/JacksonTian/httpx
 [cov-image]: https://codecov.io/gh/JacksonTian/httpx/branch/master/graph/badge.svg
 [cov-url]: https://codecov.io/gh/JacksonTian/httpx
-[david-image]: https://img.shields.io/david/JacksonTian/httpx.svg?style=flat-square
-[david-url]: https://david-dm.org/JacksonTian/httpx
 [download-image]: https://img.shields.io/npm/dm/httpx.svg?style=flat-square
 [download-url]: https://npmjs.org/package/httpx
 
@@ -90,6 +87,18 @@ Or with `async/await`.
 
 - **response** Response - the Client response. Don't setEncoding() for the response.
 - **encoding** String - Optional.
+
+## Using with http proxy
+
+```js
+const proxy = require('proxy-agent');
+const httpx = require('httpx');
+
+httpx.request('http://www.baidu.com/', {
+  // pass a http proxy agent
+  agent: new ProxyAgent("https://yourproxy:123")
+});
+```
 
 ## License
 The MIT license
