@@ -23,7 +23,7 @@
     "eslint": "^8.26.0",
     "mocha": "^10",
     "nyc": "^15.1.0",
-    "socks-proxy-agent": "^5.0.0"
+    "socks-proxy-agent": "^7.0.0"
   },
   "dependencies": {
     "@types/node": "^18",
