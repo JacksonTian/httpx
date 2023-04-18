@@ -3,14 +3,12 @@ httpx
 http(s) module with power.
 
 [![NPM version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
+[![Node.js CI](https://github.com/JacksonTian/httpx/actions/workflows/node.js.yml/badge.svg)](https://github.com/JacksonTian/httpx/actions/workflows/node.js.yml)
 [![codecov][cov-image]][cov-url]
 [![npm download][download-image]][download-url]
 
 [npm-image]: https://img.shields.io/npm/v/httpx.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/httpx
-[travis-image]: https://img.shields.io/travis/JacksonTian/httpx.svg?style=flat-square
-[travis-url]: https://travis-ci.org/JacksonTian/httpx
 [cov-image]: https://codecov.io/gh/JacksonTian/httpx/branch/master/graph/badge.svg
 [cov-url]: https://codecov.io/gh/JacksonTian/httpx
 [download-image]: https://img.shields.io/npm/dm/httpx.svg?style=flat-square
