@@ -76,6 +76,7 @@ describe('httpx', () => {
   it('compression should ok', async function () {
     var res = await make(server)('/compression');
     assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.headers['content-encoding'], 'gzip');
     var result = await httpx.read(res, 'utf8');
     assert.strictEqual(result, 'Hello world with gzip!');
   });
@@ -83,6 +84,7 @@ describe('httpx', () => {
   it('compression with deflate should ok', async function () {
     var res = await make(server)('/compression_with_deflate');
     assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.headers['content-encoding'], 'deflate');
     var result = await httpx.read(res, 'utf8');
     assert.strictEqual(result, 'Hello world with deflate!');
   });
@@ -99,7 +101,7 @@ describe('httpx', () => {
     assert.ok(false, 'should not ok');
   });
 
-  it('timeout should ok', async function () {
+  it('timeout(readTimeout) should ok', async function () {
     try {
       await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50});
     } catch (ex) {
@@ -111,7 +113,7 @@ describe('httpx', () => {
     assert.ok(false, 'should not ok');
   });
 
-  it('timeout should ok', async function () {
+  it('timeout(readTimeout & timeout) should ok', async function () {
     try {
       await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50, timeout: 300});
     } catch (ex) {
