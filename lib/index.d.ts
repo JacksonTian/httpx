@@ -20,3 +20,12 @@ export interface Options {
 export function request(url: string, options: Options): Promise<IncomingMessage>;
 
 export function read(response: IncomingMessage, encoding: string): Promise<string|Buffer>;
+
+export interface Event {
+    'data'?: string;
+    'id'?: string;
+    'event'?: string;
+    'retry'?: string;
+}
+
+export function readAsSSE(response: IncomingMessage): AsyncGenerator<Event, void, unknown>;

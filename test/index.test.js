@@ -10,7 +10,7 @@ const { SocksProxyAgent } = require('socks-proxy-agent');
 const httpx = require('../');
 
 const server = http.createServer((req, res) => {
-  if(req.url === '/readTimeout') {
+  if (req.url === '/readTimeout') {
     setTimeout(() => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('Hello world!');
@@ -37,6 +37,24 @@ const server = http.createServer((req, res) => {
     zlib.deflate('Hello world with deflate!', function (err, buff) {
       res.end(buff);
     });
+  } else if (req.url === '/sse') {
+    const headers = {
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
+    res.flushHeaders();
+    let count = 0;
+    let timer = setInterval(() => {
+      if (count >= 10) {
+        clearInterval(timer);
+        res.end();
+        return;
+      }
+      res.write(`data: ${JSON.stringify({count: count})}\n\n`);
+      count++;
+    }, 100);
   } else {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('Hello world!');
@@ -67,7 +85,8 @@ describe('httpx', () => {
     server.listen(0, done);
   });
 
-  after((done) => {
+  after(function (done) {
+    this.timeout(20000);
     srv.close();
     server.close(done);
   });
@@ -170,5 +189,22 @@ describe('httpx', () => {
     assert.strictEqual(res.statusCode, 200);
     var result = await httpx.read(res, 'utf8');
     assert.strictEqual(result, 'Hello world!');
+  });
+
+  it('readAsSSE should ok', async function () {
+    this.timeout(15000);
+    var res = await make(server)('/sse', {readTimeout: 5000});
+    assert.strictEqual(res.statusCode, 200);
+    const events = [];
+    for await (const event of httpx.readAsSSE(res)) {
+      events.push(event);
+    }
+
+    assert.strictEqual(events.length, 10);
+    const counts = events.map((event) => JSON.parse(event.data).count);
+
+    assert.deepStrictEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    ], counts);
   });
 });
