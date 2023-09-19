@@ -93,12 +93,12 @@ Consume the response and read all data from the response.
 ## Using with http proxy
 
 ```js
-const proxy = require('proxy-agent');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 const httpx = require('httpx');
 
 httpx.request('http://www.baidu.com/', {
   // pass a http proxy agent
-  agent: new ProxyAgent("https://yourproxy:123")
+  agent: new SocksProxyAgent('socks://your_proxy_server:3001')
 });
 ```
 

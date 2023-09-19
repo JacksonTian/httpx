@@ -3,7 +3,9 @@
 const http = require('http');
 const zlib = require('zlib');
 const assert = require('assert');
-const SocksProxyAgent = require('socks-proxy-agent');
+
+const socks = require('socksv5');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 
 const httpx = require('../');
 
@@ -41,14 +43,24 @@ const server = http.createServer((req, res) => {
   }
 });
 
-var make = function (server) {
+const srv = socks.createServer((info, accept, deny) => {
+  accept();
+});
+
+srv.listen(3001, 'localhost', function() {
+  console.log('SOCKS server listening on port 3001');
+});
+
+srv.useAuth(socks.auth.None());
+
+function make (server) {
   const port = server.address().port;
   var prefix = 'http://127.0.0.1:' + port;
 
   return function (path, opts) {
     return httpx.request(prefix + path, opts);
   };
-};
+}
 
 describe('httpx', () => {
   before((done) => {
@@ -56,6 +68,7 @@ describe('httpx', () => {
   });
 
   after((done) => {
+    srv.close();
     server.close(done);
   });
 
@@ -150,5 +163,12 @@ describe('httpx', () => {
       const port = server.address().port;
       assert.strictEqual(error.message, `connect ECONNREFUSED 127.0.0.1:3000GET http://127.0.0.1:${port}/ failed.`);
     }
+  });
+
+  it('request with proxy agent should ok', async function () {
+    var res = await make(server)('/', { agent: new SocksProxyAgent('socks://localhost:3001') });
+    assert.strictEqual(res.statusCode, 200);
+    var result = await httpx.read(res, 'utf8');
+    assert.strictEqual(result, 'Hello world!');
   });
 });
