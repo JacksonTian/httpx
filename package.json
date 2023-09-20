@@ -2,12 +2,12 @@
   "name": "httpx",
   "version": "2.2.7",
   "description": "http(s) module with power",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "module": "lib/index.mjs",
   "scripts": {
     "lint": "eslint --fix lib test",
-    "test": "mocha --reporter spec --timeout 3000 test/*.test.js",
-    "test-cov": "nyc -r=lcov -r=html -r=text -r=json mocha -t 3000 -R spec test/*.test.js"
+    "test": "mocha --reporter spec --timeout 3000 test/*.test.mjs",
+    "test-cov": "nyc -r=lcov -r=html -r=text -r=json npm run test"
   },
   "repository": {
     "type": "git",
