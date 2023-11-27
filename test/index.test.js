@@ -1,13 +1,11 @@
-'use strict';
+import http from 'http';
+import zlib from 'zlib';
+import assert from 'assert';
 
-const http = require('http');
-const zlib = require('zlib');
-const assert = require('assert');
+import socks from 'socksv5';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
-const socks = require('socksv5');
-const { SocksProxyAgent } = require('socks-proxy-agent');
-
-const httpx = require('../');
+import httpx from '../lib/index.js';
 
 const server = http.createServer((req, res) => {
   if (req.url === '/readTimeout') {
