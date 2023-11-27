@@ -1,15 +1,14 @@
-'use strict';
+import http from 'http';
+import zlib from 'zlib';
+import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
 
-const http = require('http');
-const zlib = require('zlib');
-const fs = require('fs');
-const path = require('path');
-const assert = require('assert');
+import socks from 'socksv5';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
-const socks = require('socksv5');
-const { SocksProxyAgent } = require('socks-proxy-agent');
-
-const httpx = require('../');
+import * as httpx from '../lib/index.js';
+import { fileURLToPath } from 'url';
 
 const server = http.createServer((req, res) => {
   if (req.url === '/readTimeout') {
@@ -159,7 +158,7 @@ describe('httpx', () => {
   it('should ok with stream', async function () {
     var res = await make(server)('/stream', {
       method: 'POST',
-      data: fs.createReadStream(path.join(__dirname, './fixtures/test.txt'))
+      data: fs.createReadStream(path.join(path.dirname(fileURLToPath(import.meta.url)), './fixtures/test.txt'))
     });
     assert.strictEqual(res.statusCode, 200);
     var result = await httpx.read(res);

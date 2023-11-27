@@ -2,12 +2,12 @@
   "name": "httpx",
   "version": "2.3.2",
   "description": "http(s) module with power",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "module": "lib/index.js",
+  "type": "module",
   "scripts": {
     "lint": "eslint --fix lib test",
     "test": "mocha --reporter spec --timeout 3000 test/*.test.js",
-    "test-cov": "nyc -r=lcov -r=html -r=text -r=json mocha -t 3000 -R spec test/*.test.js"
+    "test-cov": "c8 -r=lcov -r=html -r=text -r=json mocha -t 3000 -R spec test/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -20,14 +20,16 @@
   },
   "homepage": "https://github.com/JacksonTian/httpx",
   "devDependencies": {
+    "c8": "^8.0.1",
     "eslint": "^8.26.0",
     "mocha": "^10",
-    "nyc": "^15.1.0",
     "socks-proxy-agent": "^7",
     "socksv5": "^0.0.6"
   },
+  "engines": {
+    "node": ">= 12"
+  },
   "dependencies": {
-    "@types/node": "^20",
     "debug": "^4.1.1"
   },
   "files": [
