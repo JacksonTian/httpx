@@ -52,8 +52,8 @@
     "after": true
   },
   "parserOptions": {
-    "ecmaVersion": 2023,
-    "sourceType": "script",
+    "ecmaVersion": "latest",
+    "sourceType": "module",
     "ecmaFeatures": {
       "jsx": true
     }
