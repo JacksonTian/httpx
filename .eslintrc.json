@@ -52,7 +52,7 @@
     "after": true
   },
   "parserOptions": {
-    "ecmaVersion": 8,
+    "ecmaVersion": 2023,
     "sourceType": "script",
     "ecmaFeatures": {
       "jsx": true
