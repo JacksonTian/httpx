@@ -22,53 +22,32 @@ npm install httpx --save
 
 ## Usage
 
-```js
-'use strict';
-
-const httpx = require('httpx');
-
-httpx.request('http://www.baidu.com/').then((response) => {
-  response.pipe(process.stdout);
-
-  response.on('end', () => {
-    process.stdout.write('\n');
-  });
-}, (err) => {
-  // on error
-});
-```
-
-Or with `co`.
-
-```js
-co(function* () {
-  var response = yield httpx.request('http://www.baidu.com/');
-
-  response.pipe(process.stdout);
-
-  response.on('end', () => {
-    process.stdout.write('\n');
-  });
-});
-```
-
-Or with `async/await`.
+### Request URL
 
 ```js
 (async function () {
-  var response = await httpx.request('http://www.baidu.com/');
+  const response = await httpx.request('http://www.baidu.com/');
+  const body = await httpx.read(response, 'utf-8');
+  console.log(body);
+})();
+```
 
-  response.pipe(process.stdout);
+### Request SSE URL
 
-  response.on('end', () => {
-    process.stdout.write('\n');
-  });
+```js
+(async function () {
+  const response = await httpx.request('sse url');
+  for await (const event of httpx.readAsSSE(response)) {
+    console.log(event);
+  }
 })();
 ```
 
 ## API
 
 ### `httpx.request(url[, options])`
+
+It returns `Promise<Response>`.
 
 Requests the url with options, then return the response.
 
@@ -85,10 +64,20 @@ Requests the url with options, then return the response.
 
 ### `httpx.read(response[, encoding])`
 
+It returns `Promise<Buffer | String>`.
+
 Consume the response and read all data from the response.
 
 - **response** Response - the Client response. Don't setEncoding() for the response.
 - **encoding** String - Optional. If specify the encoding, will return String. If not specify encoding, return the buffer.
+
+### `httpx.readAsSSE(response)`
+
+It returns `AsyncGenerator<Event, void, unknown>`.
+
+Consume the response data with async iterator.
+
+- **response** Response - the Client response. Don't setEncoding() for the response.
 
 ## Using with http proxy
 
