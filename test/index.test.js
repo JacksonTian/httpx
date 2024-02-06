@@ -47,12 +47,12 @@ const server = http.createServer((req, res) => {
     res.flushHeaders();
     let count = 0;
     let timer = setInterval(() => {
-      if (count >= 10) {
+      if (count >= 5) {
         clearInterval(timer);
         res.end();
         return;
       }
-      res.write(`data: ${JSON.stringify({count: count})}\n\n`);
+      res.write(`data: ${JSON.stringify({count: count})}\nevent: flow\nid: sse-test\nretry: 3\n\n`);
       count++;
     }, 100);
   } else {
@@ -200,11 +200,34 @@ describe('httpx', () => {
       events.push(event);
     }
 
-    assert.strictEqual(events.length, 10);
-    const counts = events.map((event) => JSON.parse(event.data).count);
 
-    assert.deepStrictEqual([
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-    ], counts);
+    assert.strictEqual(events.length, 5);
+
+    assert.deepStrictEqual([new httpx.Event({
+      data: '{"count":0}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), new httpx.Event({
+      data: '{"count":1}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), new httpx.Event({
+      data: '{"count":2}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), new httpx.Event({
+      data: '{"count":3}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), new httpx.Event({
+      data: '{"count":4}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    })], events);
   });
 });
