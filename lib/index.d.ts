@@ -25,7 +25,7 @@ export interface Event {
     'data'?: string;
     'id'?: string;
     'event'?: string;
-    'retry'?: string;
+    'retry'?: number;
 }
 
 export function readAsSSE(response: IncomingMessage): AsyncGenerator<Event, void, unknown>;
