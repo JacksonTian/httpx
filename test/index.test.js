@@ -2,6 +2,8 @@
 
 const http = require('http');
 const zlib = require('zlib');
+const fs = require('fs');
+const path = require('path');
 const assert = require('assert');
 
 const socks = require('socksv5');
@@ -23,6 +25,15 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('Hello world!');
     }, 200);
+  } else if (req.url === '/stream') {
+    res.writeHead(200);
+    const buffers = [];
+    req.on('data', (chunk) => {
+      buffers.push(chunk);
+    });
+    req.on('end', () => {
+      res.end(Buffer.concat(buffers).toString());
+    });
   } else if (req.url === '/compression') {
     res.writeHead(200, {
       'content-encoding': 'gzip'
@@ -52,7 +63,7 @@ const server = http.createServer((req, res) => {
         res.end();
         return;
       }
-      res.write(`data: ${JSON.stringify({count: count})}\nevent: flow\nid: sse-test\nretry: 3\n\n`);
+      res.write(`data: ${JSON.stringify({count: count})}\nevent: flow\nid: sse-test\nretry: 3\n:heartbeat\n\n`);
       count++;
     }, 100);
   } else if (req.url === '/sse_with_no_spaces') {
@@ -140,6 +151,16 @@ describe('httpx', () => {
 
   it('should ok with buffer', async function () {
     var res = await make(server)('/');
+    assert.strictEqual(res.statusCode, 200);
+    var result = await httpx.read(res);
+    assert.deepStrictEqual(result, Buffer.from('Hello world!'));
+  });
+
+  it('should ok with stream', async function () {
+    var res = await make(server)('/stream', {
+      method: 'POST',
+      data: fs.createReadStream(path.join(__dirname, './fixtures/test.txt'))
+    });
     assert.strictEqual(res.statusCode, 200);
     var result = await httpx.read(res);
     assert.deepStrictEqual(result, Buffer.from('Hello world!'));
