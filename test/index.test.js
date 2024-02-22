@@ -55,6 +55,42 @@ const server = http.createServer((req, res) => {
       res.write(`data: ${JSON.stringify({count: count})}\nevent: flow\nid: sse-test\nretry: 3\n\n`);
       count++;
     }, 100);
+  } else if (req.url === '/sse_with_no_spaces') {
+    const headers = {
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
+    res.flushHeaders();
+    let count = 0;
+    let timer = setInterval(() => {
+      if (count >= 5) {
+        clearInterval(timer);
+        res.end();
+        return;
+      }
+      res.write(`data:${JSON.stringify({count: count})}\nevent:flow\nid:sse-test\nretry:3\n\n`);
+      count++;
+    }, 100);
+  } else if (req.url === '/sse_invalid_retry') {
+    const headers = {
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
+    res.flushHeaders();
+    let count = 0;
+    let timer = setInterval(() => {
+      if (count >= 5) {
+        clearInterval(timer);
+        res.end();
+        return;
+      }
+      res.write(`data:${JSON.stringify({count: count})}\nevent:flow\nid:sse-test\nretry: abc\n\n`);
+      count++;
+    }, 100);
   } else {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('Hello world!');
@@ -78,6 +114,10 @@ function make (server) {
   return function (path, opts) {
     return httpx.request(prefix + path, opts);
   };
+}
+
+function newEvent(d) {
+  return new httpx.Event(d.id, d.event, d.data, d.retry);
 }
 
 describe('httpx', () => {
@@ -200,34 +240,112 @@ describe('httpx', () => {
       events.push(event);
     }
 
-
     assert.strictEqual(events.length, 5);
 
-    assert.deepStrictEqual([new httpx.Event({
+    assert.deepStrictEqual([newEvent({
       data: '{"count":0}',
       event: 'flow',
       id: 'sse-test',
       retry: 3,
-    }), new httpx.Event({
+    }), newEvent({
       data: '{"count":1}',
       event: 'flow',
       id: 'sse-test',
       retry: 3,
-    }), new httpx.Event({
+    }), newEvent({
       data: '{"count":2}',
       event: 'flow',
       id: 'sse-test',
       retry: 3,
-    }), new httpx.Event({
+    }), newEvent({
       data: '{"count":3}',
       event: 'flow',
       id: 'sse-test',
       retry: 3,
-    }), new httpx.Event({
+    }), newEvent({
       data: '{"count":4}',
       event: 'flow',
       id: 'sse-test',
       retry: 3,
+    })], events);
+  });
+
+  it('readAsSSE with no spaces should ok', async function () {
+    this.timeout(15000);
+    var res = await make(server)('/sse_with_no_spaces', {readTimeout: 5000});
+    assert.strictEqual(res.statusCode, 200);
+    const events = [];
+    for await (const event of httpx.readAsSSE(res)) {
+      events.push(event);
+    }
+
+    assert.strictEqual(events.length, 5);
+
+    assert.deepStrictEqual([newEvent({
+      data: '{"count":0}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), newEvent({
+      data: '{"count":1}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), newEvent({
+      data: '{"count":2}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), newEvent({
+      data: '{"count":3}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), newEvent({
+      data: '{"count":4}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    })], events);
+  });
+
+
+  it('readAsSSE with invalid retry should ok', async function () {
+    this.timeout(15000);
+    var res = await make(server)('/sse_invalid_retry', {readTimeout: 5000});
+    assert.strictEqual(res.statusCode, 200);
+    const events = [];
+    for await (const event of httpx.readAsSSE(res)) {
+      events.push(event);
+    }
+
+    assert.strictEqual(events.length, 5);
+
+    assert.deepStrictEqual([newEvent({
+      data: '{"count":0}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: undefined,
+    }), newEvent({
+      data: '{"count":1}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: undefined,
+    }), newEvent({
+      data: '{"count":2}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: undefined,
+    }), newEvent({
+      data: '{"count":3}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: undefined,
+    }), newEvent({
+      data: '{"count":4}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: undefined,
     })], events);
   });
 });
