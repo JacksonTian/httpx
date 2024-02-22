@@ -1,6 +1,6 @@
 {
   "name": "httpx",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "http(s) module with power",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
