@@ -2,7 +2,8 @@
   "name": "httpx",
   "version": "3.0.0",
   "description": "http(s) module with power",
-  "module": "lib/index.js",
+  "main": "./lib/index.js",
+  "exports": "./lib/index.js",
   "type": "module",
   "scripts": {
     "lint": "eslint --fix lib test",
