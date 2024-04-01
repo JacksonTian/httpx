@@ -22,25 +22,25 @@ npm install httpx --save
 
 ## Usage
 
+```js
+import * as httpx from 'httpx';
+```
+
 ### Request URL
 
 ```js
-(async function () {
-  const response = await httpx.request('http://www.baidu.com/');
-  const body = await httpx.read(response, 'utf-8');
-  console.log(body);
-})();
+const response = await httpx.request('http://www.baidu.com/');
+const body = await httpx.read(response, 'utf-8');
+console.log(body);
 ```
 
 ### Request SSE URL
 
 ```js
-(async function () {
-  const response = await httpx.request('sse url');
-  for await (const event of httpx.readAsSSE(response)) {
-    console.log(event);
-  }
-})();
+const response = await httpx.request('sse url');
+for await (const event of httpx.readAsSSE(response)) {
+  console.log(event);
+}
 ```
 
 ## API
@@ -82,10 +82,10 @@ Consume the response data with async iterator.
 ## Using with http proxy
 
 ```js
-const { SocksProxyAgent } = require('socks-proxy-agent');
-const httpx = require('httpx');
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import * as httpx from 'httpx';
 
-httpx.request('http://www.baidu.com/', {
+await httpx.request('http://www.baidu.com/', {
   // pass a http proxy agent
   agent: new SocksProxyAgent('socks://your_proxy_server:3001')
 });
