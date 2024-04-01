@@ -1,6 +1,6 @@
 {
   "name": "httpx",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "http(s) module with power",
   "main": "./lib/index.js",
   "exports": "./lib/index.js",
