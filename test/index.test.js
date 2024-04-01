@@ -101,6 +101,32 @@ const server = http.createServer((req, res) => {
       res.write(`data:${JSON.stringify({count: count})}\nevent:flow\nid:sse-test\nretry: abc\n\n`);
       count++;
     }, 100);
+  } else if (req.url === '/sse_with_data_divided') {
+    const headers = {
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
+    res.flushHeaders();
+    let count = 0;
+    let timer = setInterval(() => {
+      if (count >= 5) {
+        clearInterval(timer);
+        res.end();
+        return;
+      }
+      if (count === 1) {
+        res.write('data:{"count":');
+        count++;
+        return;
+      }
+      if (count === 2) {
+        res.write(`${count++},"tag":"divided"}\nevent:flow\nid:sse-test\nretry:3\n\n`);
+        return;
+      }
+      res.write(`data:${JSON.stringify({count: count++})}\nevent:flow\nid:sse-test\nretry:3\n\n`);
+    }, 100);
   } else {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('Hello world!');
@@ -329,7 +355,6 @@ describe('httpx', () => {
     })], events);
   });
 
-
   it('readAsSSE with invalid retry should ok', async function () {
     this.timeout(15000);
     var res = await make(server)('/sse_invalid_retry', {readTimeout: 5000});
@@ -366,6 +391,40 @@ describe('httpx', () => {
       event: 'flow',
       id: 'sse-test',
       retry: undefined,
+    })], events);
+  });
+
+  it('readAsSSE with data divided should ok', async function () {
+    this.timeout(15000);
+    var res = await make(server)('/sse_with_data_divided', {readTimeout: 5000});
+    assert.strictEqual(res.statusCode, 200);
+    const events = [];
+    for await (const event of httpx.readAsSSE(res)) {
+      events.push(event);
+    }
+
+    assert.strictEqual(events.length, 4);
+
+    assert.deepStrictEqual([newEvent({
+      data: '{"count":0}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3
+    }), newEvent({
+      data: '{"count":2,"tag":"divided"}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), newEvent({
+      data: '{"count":3}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
+    }), newEvent({
+      data: '{"count":4}',
+      event: 'flow',
+      id: 'sse-test',
+      retry: 3,
     })], events);
   });
 });
