@@ -24,7 +24,7 @@
     "c8": "^8.0.1",
     "eslint": "^8.26.0",
     "mocha": "^10",
-    "socks-proxy-agent": "^7",
+    "socks-proxy-agent": "^8",
     "socksv5": "^0.0.6"
   },
   "engines": {
