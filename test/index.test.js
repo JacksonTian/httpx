@@ -23,7 +23,7 @@ const server = http.createServer((req, res) => {
     setTimeout(() => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('Hello world!');
-    }, 200);
+    }, 1200);
   } else if (req.url === '/stream') {
     res.writeHead(200);
     const buffers = [];
@@ -209,11 +209,25 @@ describe('httpx', () => {
 
   it('timeout should ok', async function () {
     try {
-      await make(server)('/timeout', {timeout: 100});
+      await make(server)('/timeout', {timeout: 1000});
     } catch (ex) {
       assert.strictEqual(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
-      assert.strictEqual(ex.message, `ReadTimeout(100). GET http://127.0.0.1:${port}/timeout failed.`);
+      assert.strictEqual(ex.message, `ReadTimeout(1000). GET http://127.0.0.1:${port}/timeout failed.`);
+      return;
+    }
+    assert.ok(false, 'should not ok');
+  });
+
+  it('timeout(connectTimeout) should ok', async function () {
+    try {
+      await httpx.request('http://100.100.100.200', {
+        readTimeout: 1000,
+        connectTimeout: 1000
+      });
+    } catch (ex) {
+      assert.strictEqual(ex.name, 'RequestTimeoutError');
+      assert.strictEqual(ex.message, 'ConnectTimeout: Connect http://100.100.100.200 failed.');
       return;
     }
     assert.ok(false, 'should not ok');
@@ -221,7 +235,7 @@ describe('httpx', () => {
 
   it('timeout(readTimeout) should ok', async function () {
     try {
-      await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50});
+      await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 1000});
     } catch (ex) {
       assert.strictEqual(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
@@ -233,7 +247,7 @@ describe('httpx', () => {
 
   it('timeout(readTimeout & timeout) should ok', async function () {
     try {
-      await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 50, timeout: 300});
+      await make(server)('/readTimeout', {readTimeout: 100, connectTimeout: 1000, timeout: 300});
     } catch (ex) {
       assert.strictEqual(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
