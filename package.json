@@ -35,5 +35,16 @@
   },
   "files": [
     "lib"
+  ],
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "http",
+    "client",
+    "request",
+    "response",
+    "SSE"
   ]
 }
