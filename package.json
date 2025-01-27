@@ -23,7 +23,7 @@
   "devDependencies": {
     "c8": "^8.0.1",
     "eslint": "^8.26.0",
-    "mocha": "^10",
+    "mocha": "^11",
     "socks-proxy-agent": "^7",
     "socksv5": "^0.0.6"
   },
