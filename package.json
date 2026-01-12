@@ -26,7 +26,7 @@
     "c8": "^8.0.1",
     "eslint": "^9.39.2",
     "globals": "^17.0.0",
-    "mocha": "^10",
+    "mocha": "^11",
     "socks-proxy-agent": "^7",
     "socksv5": "^0.0.6"
   },
