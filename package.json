@@ -27,7 +27,7 @@
     "eslint": "^9.39.2",
     "globals": "^17.0.0",
     "mocha": "^10",
-    "socks-proxy-agent": "^7",
+    "socks-proxy-agent": "^8",
     "socksv5": "^0.0.6"
   },
   "engines": {
